@@ -25,13 +25,13 @@ import java.util.List;
 public class UserDetailsServiceImpl implements UserDetailsService {
 
     @Autowired
-    private UsuarioRepository usuarioRepository;
+    UsuarioRepository usuarioRepository;
 
     @Autowired
-    private JwtUtils jwtUtils;
+    JwtUtils jwtUtils;
 
     @Autowired
-    private PasswordEncoder passwordEncoder;
+    PasswordEncoder passwordEncoder;
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
@@ -46,6 +46,16 @@ public class UserDetailsServiceImpl implements UserDetailsService {
         userEntity.getRoles().stream()
                 .flatMap(role -> role.getPermisos().stream())
                 .forEach(permiso -> authorityList.add(new SimpleGrantedAuthority(permiso.getName())));
+
+        System.out.println("------------------------------------------------------------------");
+
+        System.out.println("AUTHORITIES PARA: " + userEntity.getEmail());
+    
+        for (SimpleGrantedAuthority theAuth : authorityList) {
+            System.out.println(theAuth);
+        }
+    
+        System.out.println("------------------------------------------------------------------");
 
         return new User(
                 userEntity.getEmail(),
@@ -67,12 +77,9 @@ public class UserDetailsServiceImpl implements UserDetailsService {
 
         String accessToken = jwtUtils.createToken(auth);
 
-        // Extraer roles del Authentication
-        List<String> roles = auth.getAuthorities().stream()
-                .map(authority -> authority.getAuthority().replace("ROLE_", ""))
-                .toList();
+        AuthResponse authResponse = new AuthResponse(username, "Usuario logeado con exito", accessToken, true);
 
-        return new AuthResponse(username, "User Logged Successfully", accessToken, true, roles);
+        return authResponse;
     }
 
     private Authentication authenticate(String username, String password) {

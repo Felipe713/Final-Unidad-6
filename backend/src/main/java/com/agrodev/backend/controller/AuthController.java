@@ -3,7 +3,12 @@ package com.agrodev.backend.controller;
 import com.agrodev.backend.dto.AuthLoginRequest;
 import com.agrodev.backend.dto.AuthResponse;
 import com.agrodev.backend.service.UserDetailsServiceImpl;
+
+import jakarta.validation.Valid;
+
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -27,26 +32,11 @@ public class AuthController {
     private UserDetailsServiceImpl userDetailService;
 
     @PostMapping("/log-in")
-    public void login(@Validated @RequestBody AuthLoginRequest userRequest) {
+    public ResponseEntity<AuthResponse> login(@Valid @RequestBody AuthLoginRequest userRequest) {
         System.out.println("Llego al backend");
-        Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(userRequest.username(), userRequest.password())
-        );
 
-        SecurityContextHolder.getContext().setAuthentication(authentication);
+        return new ResponseEntity<>(userDetailService.loginUser(userRequest), HttpStatus.OK);
 
-        var userDetails = (UserDetails) authentication.getPrincipal();
-        List<String> roles = userDetails.getAuthorities().stream()
-                .map(GrantedAuthority::getAuthority)
-                .collect(Collectors.toList());
-
-        AuthResponse authResponse = new AuthResponse(
-                userDetails.getUsername(),
-                "Login exitoso", // Puedes usar un mensaje fijo o dinámico.
-                "JWT_TOKEN", // Aquí debes insertar el token JWT generado.
-                true, // Status de autenticación.
-                roles // Pasar la lista de roles.
-        );
 
     }
 
